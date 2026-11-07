@@ -47,10 +47,21 @@ public class UsuarioService {
         entrada.setId(salvo.getId());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void atualizarUsuario(String id, Usuario entrada) {
+        usuarios.bloquearAdministradores();
         Usuario atual = usuarios.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
         validar(entrada, id);
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && Objects.equals(atual.getUsername(), auth.getName())
+                && (!Objects.equals(atual.getRole(), entrada.getRole())
+                || !Objects.equals(atual.getUsername(), entrada.getUsername()))) {
+            throw new IllegalArgumentException("Não é permitido alterar o próprio perfil ou login.");
+        }
+        if ("ADMIN".equals(atual.getRole()) && !"ADMIN".equals(entrada.getRole())) {
+            protegerUltimoAdmin();
+        }
         atual.setUsername(entrada.getUsername());
         atual.setRole(entrada.getRole());
         if (entrada.getPassword() != null && !entrada.getPassword().isBlank()) {
@@ -59,8 +70,23 @@ public class UsuarioService {
         usuarios.save(atual);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deletarUsuario(String id) {
+        usuarios.bloquearAdministradores();
+        Usuario atual = usuarios.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
+        if ("ADMIN".equals(atual.getRole())) protegerUltimoAdmin();
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && Objects.equals(atual.getUsername(), auth.getName())) {
+            throw new IllegalArgumentException("Não é permitido excluir o próprio usuário.");
+        }
         usuarios.deleteById(id);
+    }
+
+    private void protegerUltimoAdmin() {
+        if (usuarios.countByRole("ADMIN") <= 1) {
+            throw new IllegalArgumentException("Não é permitido remover o último administrador.");
+        }
     }
 
     private void validar(Usuario usuario, String id) {

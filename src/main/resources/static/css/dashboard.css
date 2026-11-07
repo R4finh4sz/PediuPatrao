@@ -1,0 +1,21 @@
+:root { --cui-primary: #0d6efd; --cui-primary-rgb: 13,110,253; }
+body { background: #f5f6f8; color: #212529; }
+header nav a { color: #fff; text-underline-offset: .25em; }
+h1 { font-size: clamp(1.65rem, 3vw, 2.15rem); font-weight: 650; }
+h2 { font-size: 1.15rem; font-weight: 650; margin-bottom: 1.25rem; }
+.indicadores { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); background: white; border-block: 1px solid #d8dbe0; }
+.indicadores div { padding: 1.5rem; }
+.indicadores dt { font-size: .875rem; font-weight: 500; color: #495057; }
+.indicadores dd { font-size: clamp(1.3rem,2.3vw,1.9rem); margin: .5rem 0 0; font-weight: 650; overflow-wrap: anywhere; }
+.card { border-radius: 12px; }
+.card-body { padding: 1.5rem; }
+.grafico { height: 280px; position: relative; }
+.grafico-status { height: 190px; }
+dd, td, #contagens { font-variant-numeric: tabular-nums; }
+td { overflow-wrap: anywhere; }
+#contagens li { display: flex; justify-content: space-between; gap: 1rem; padding-block: .3rem; }
+:focus-visible { outline: 3px solid #0d6efd; outline-offset: 3px; }
+::selection { background: #cfe2ff; color: #052c65; }
+input { caret-color: #0d6efd; }
+@media(max-width: 767px) { .indicadores { grid-template-columns: repeat(2,minmax(0,1fr)); } .indicadores div { padding: 1rem; } .card-body { padding: 1rem; } }
+@media(prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

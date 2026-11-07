@@ -106,11 +106,20 @@ class AutorizacaoTest {
   mvc.perform(put("/api/clientes/c1").with(user("gerente").roles("GERENTE")).with(csrf()).contentType("application/json")
    .content("{\"nome\":\"Cliente\",\"telefone\":\"999\"}")).andExpect(status().isForbidden());
  }
- @Test void somenteAtendenteRegistraPedidos() throws Exception {
-  for(String role:List.of("ADMIN","GERENTE")) {
+ @Test void adminNaoRegistraPedidos() throws Exception {
+  for(String role:List.of("ADMIN")) {
    mvc.perform(post("/api/pedidos").with(user("usuario").roles(role)).with(csrf()).contentType("application/json")
     .content("{\"clienteId\":\"c1\",\"itens\":[]}")).andExpect(status().isForbidden());
   }
+ }
+ @Test void gerentePodeRegistrarPedidoPelaApi() throws Exception {
+  when(clientes.existsById("c1")).thenReturn(true);
+  Produto produto=new Produto(); produto.setId("p1"); produto.setNome("Pizza"); produto.setAtivo(true); produto.setPreco(25.0);
+  when(produtos.findById("p1")).thenReturn(Optional.of(produto));
+  when(pedidos.save(any())).thenAnswer(i->{Pedido p=i.getArgument(0);p.setId("novo");return p;});
+  mvc.perform(post("/api/pedidos").with(user("gerente").roles("GERENTE")).with(csrf()).contentType("application/json")
+   .content("{\"clienteId\":\"c1\",\"itens\":[{\"produtoId\":\"p1\",\"quantidade\":2}]}"))
+   .andExpect(status().isOk()).andExpect(jsonPath("$.valorTotal").value(50));
  }
  @Test void senhasNaoSaoExpostas() throws Exception {
   Usuario u=new Usuario(); u.setId("u1"); u.setUsername("atendente"); u.setRole("ATENDENTE"); u.setPassword("hash-secreto");

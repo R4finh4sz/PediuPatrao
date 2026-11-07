@@ -6,6 +6,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 @ControllerAdvice
 public class TratamentoErros {
+ @ExceptionHandler(org.springframework.transaction.TransactionException.class)
+ @ResponseStatus(HttpStatus.CONFLICT)
+ public Object transacao(HttpServletRequest request,Model model) {
+  String mensagem="A operação não foi confirmada. Atualize a página e tente novamente.";
+  if(request.getRequestURI().startsWith("/api/")) return ResponseEntity.status(409).body(java.util.Map.of("erro",mensagem));
+  model.addAttribute("message",mensagem); model.addAttribute("status",409); return "error";
+ }
+ @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+ @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+ public Object banco(HttpServletRequest request,Model model) {
+  String mensagem="Não foi possível acessar os dados. Tente novamente em instantes.";
+  if(request.getRequestURI().startsWith("/api/")) return ResponseEntity.status(503).body(java.util.Map.of("erro",mensagem));
+  model.addAttribute("message",mensagem); model.addAttribute("status",503); return "error";
+ }
  @ModelAttribute("perfil")
  public String perfil(org.springframework.security.core.Authentication auth) {
   return auth==null?"":auth.getAuthorities().stream().findFirst().map(a->a.getAuthority().replace("ROLE_","")).orElse("");

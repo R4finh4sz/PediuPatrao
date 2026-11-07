@@ -22,6 +22,7 @@ public class ClienteService {
     }
 
     @PreAuthorize("hasRole('ATENDENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Cliente novoCliente(Cliente cliente) {
         return salvar(cliente);
     }
@@ -32,6 +33,7 @@ public class ClienteService {
     }
 
     @PreAuthorize("hasRole('ATENDENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public void excluir(String id) {
         Cliente cliente = clientes.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
@@ -45,6 +47,7 @@ public class ClienteService {
     }
 
     @PreAuthorize("hasRole('ATENDENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Cliente salvar(Cliente cliente) {
         if (cliente.getNome() == null || cliente.getNome().isBlank()
                 || cliente.getTelefone() == null || cliente.getTelefone().isBlank()) {

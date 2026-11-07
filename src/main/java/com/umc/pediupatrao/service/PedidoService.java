@@ -34,7 +34,8 @@ public class PedidoService {
         this.auditoria = auditoria;
     }
 
-    @PreAuthorize("hasRole('ATENDENTE')")
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'GERENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Pedido criarPedido(Pedido entrada) {
         if (entrada.getClienteId() == null || !clientes.existsById(entrada.getClienteId())) {
             throw new IllegalArgumentException("Cliente não encontrado.");
@@ -81,6 +82,7 @@ public class PedidoService {
     }
 
     @PreAuthorize("hasRole('GERENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Pedido atualizarStatus(String id, String status) {
         Pedido pedido = buscar(id);
         List<String> proximos = switch (pedido.getStatus() == null ? "" : pedido.getStatus()) {
@@ -103,6 +105,7 @@ public class PedidoService {
     }
 
     @PreAuthorize("hasRole('GERENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Pedido aplicarDesconto(String id, BigDecimal percentual) {
         Pedido pedido = buscar(id);
         validarAntesSaida(pedido);
@@ -117,6 +120,7 @@ public class PedidoService {
     }
 
     @PreAuthorize("hasRole('GERENTE')")
+    @org.springframework.transaction.annotation.Transactional
     public Pedido cancelar(String id, String justificativa) {
         Pedido pedido = buscar(id);
         validarAntesSaida(pedido);

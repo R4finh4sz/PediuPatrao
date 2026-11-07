@@ -4,7 +4,7 @@ Sistema de pizzaria em Java 21, Spring Boot, Spring Security, Thymeleaf e MongoD
 
 ## Executar
 
-É necessário ter Java 21 e uma instância MongoDB em execução. O projeto inclui Maven Wrapper.
+É necessário ter Java 21 e uma instância MongoDB com replica set (ou MongoDB Atlas) em execução. As operações e a auditoria usam transações conjuntas; MongoDB standalone não suporta essas escritas. O projeto inclui Maven Wrapper.
 
 Preencha o arquivo `.env` na raiz com sua URI em `MONGODB_URI`, o banco em `MONGODB_DATABASE` e a senha inicial em `ADMIN_PASSWORD`, sem aspas. O Spring Boot lê esse arquivo automaticamente e ele está ignorado pelo Git. Em outro checkout, copie `.env.example` para `.env`.
 
@@ -25,7 +25,7 @@ Para reutilizar um banco antigo, atribua o perfil ADMIN ao administrador existen
 | Perfil | Permissões |
 | --- | --- |
 | ADMIN | Administrar usuários e perfis, consultar pedidos e auditoria. |
-| GERENTE | Consultar clientes, alterar status dos pedidos, aplicar descontos, cancelar pedidos e consultar auditoria. |
+| GERENTE | Consultar clientes, registrar pedidos, alterar status, aplicar descontos, cancelar pedidos e consultar auditoria e dashboard. |
 | ATENDENTE | Cadastrar, atualizar e excluir clientes, registrar pedidos e consultar seu andamento. |
 
 A gestão de produtos existente foi mantida para os usuários autenticados. As permissões são verificadas no backend pelo Spring Security, incluindo chamadas diretas às APIs. ADMIN também recebe acesso negado ao tentar cancelar ou aplicar desconto.
@@ -43,7 +43,8 @@ As regras ficam nos serviços; os controladores e formulários utilizam essas me
 | Método | Rota | Acesso |
 | --- | --- | --- |
 | GET | /api/pedidos | Três perfis |
-| POST | /api/pedidos | ATENDENTE |
+| POST | /api/pedidos | ATENDENTE e GERENTE |
+| GET | /api/dashboard/resumo?inicio=2026-11-01&fim=2026-11-07 | ADMIN e GERENTE |
 | PUT | /api/pedidos/{id}/status?status=PRONTO | GERENTE |
 | PUT | /api/pedidos/{id}/desconto?percentual=20 | GERENTE |
 | PUT | /api/pedidos/{id}/cancelamento?justificativa=Motivo | GERENTE |
@@ -65,33 +66,14 @@ Exemplo de corpo para registrar um pedido:
 
 ## Testes
 
+O dashboard está em **/dashboard**, também disponível no menu para ADMIN e GERENTE. Mantém as cores atuais e usa CoreUI com gráficos, indicadores, ranking, filtros e atualização manual pela API.
+
+A implementação está na branch `feature/dashboard-administrativo`. No fluxo Gitflow, revisar a feature em PR para `develop` e promover a versão validada para `main`; nenhum merge ou envio remoto foi realizado automaticamente.
+
+A administração protege o próprio perfil/login, a exclusão do próprio usuário e a remoção/rebaixamento do último ADMIN. Pedidos e clientes são gravados na mesma transação da auditoria. Cancelamentos e descontos continuam exclusivos do GERENTE.
+
 ```powershell
 .\mvnw.cmd test
 ```
 
 Os testes verificam cálculo no servidor, transições e saída, limites de desconto, cancelamento, auditoria de telefone e endereço, perfis de autenticação, proteção contra atribuição indevida de perfis, respostas sem senhas, CSRF e bloqueio das APIs. Também verificam os formulários Thymeleaf. Usam repositórios simulados, sem acessar MongoDB externo.
-
-## Demonstração individual em vídeo
-
-Grave a tela com a aplicação executando:
-
-1. Entre como ADMIN, cadastre GERENTE e ATENDENTE e mostre a consulta de pedidos.
-2. Entre como ATENDENTE, cadastre um cliente, altere telefone/endereço e registre um pedido com produtos ativos.
-3. Entre como GERENTE, aplique desconto, avance até PRONTO e registre saída e finalização. Mostre os horários e responsáveis.
-4. Registre outro pedido e cancele como GERENTE com justificativa. Mostre que não é possível alterar o pedido cancelado.
-5. Consulte a auditoria como GERENTE e ADMIN e mostre os valores anteriores e novos das operações.
-6. Demonstre tentativas de acesso direto às APIs sem autorização, com CSRF válido, incluindo ADMIN tentando descontar e ATENDENTE tentando consultar auditoria.
-
-Para demonstrar o bloqueio no navegador, entre como ADMIN, abra **Pedidos**, copie o token do formulário de saída e execute no console, substituindo o ID:
-
-```javascript
-const token = document.querySelector('input[name="_csrf"]').value;
-const resposta = await fetch('/api/pedidos/ID_DO_PEDIDO/desconto?percentual=10', {
-  method: 'PUT',
-  headers: {'X-CSRF-TOKEN': token}
-});
-console.log(resposta.status);
-```
-
-O vídeo individual deve mostrar a execução real e ser entregue junto ao repositório.
-

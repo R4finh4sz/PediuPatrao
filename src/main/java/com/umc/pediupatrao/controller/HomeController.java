@@ -117,7 +117,7 @@ public class HomeController {
         List<Pedido> pedidos = pedidoService.listarPedidos();
         model.addAttribute("pedidos", pedidos);
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ATENDENTE"))) {
+        if (auth.getAuthorities().stream().anyMatch(a -> java.util.Set.of("ROLE_ATENDENTE", "ROLE_GERENTE").contains(a.getAuthority()))) {
             model.addAttribute("clientes", clienteService.listarClientes());
             model.addAttribute("produtos", produtoService.listarProdutos());
         }

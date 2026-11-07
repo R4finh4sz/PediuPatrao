@@ -11,6 +11,39 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UsuarioServiceTest {
+    @org.junit.jupiter.api.AfterEach void limparContexto() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @Test void naoPermiteAlterarProprioPerfilOuLogin() {
+        Usuario atual = new Usuario(); atual.setId("admin"); atual.setUsername("admin"); atual.setRole("ADMIN");
+        when(usuarios.findById("admin")).thenReturn(Optional.of(atual));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("admin", "senha"));
+        Usuario entrada = new Usuario(); entrada.setUsername("admin"); entrada.setRole("GERENTE");
+        assertThrows(IllegalArgumentException.class, () -> service.atualizarUsuario("admin", entrada));
+        entrada.setRole("ADMIN"); entrada.setUsername("outro");
+        assertThrows(IllegalArgumentException.class, () -> service.atualizarUsuario("admin", entrada));
+        verify(usuarios, never()).save(any());
+    }
+
+    @Test void ultimoAdminNaoPodeSerExcluidoOuRebaixado() {
+        Usuario atual = new Usuario(); atual.setId("a1"); atual.setUsername("admin"); atual.setRole("ADMIN");
+        when(usuarios.findById("a1")).thenReturn(Optional.of(atual)); when(usuarios.countByRole("ADMIN")).thenReturn(1L);
+        Usuario entrada = new Usuario(); entrada.setUsername("admin"); entrada.setRole("GERENTE");
+        assertThrows(IllegalArgumentException.class, () -> service.atualizarUsuario("a1", entrada));
+        assertThrows(IllegalArgumentException.class, () -> service.deletarUsuario("a1"));
+        verify(usuarios, never()).save(any()); verify(usuarios, never()).deleteById(any());
+    }
+
+    @Test void podeExcluirOutroAdminSeAindaExisteUm() {
+        Usuario atual = new Usuario(); atual.setId("a1"); atual.setUsername("outro"); atual.setRole("ADMIN");
+        when(usuarios.findById("a1")).thenReturn(Optional.of(atual)); when(usuarios.countByRole("ADMIN")).thenReturn(2L);
+        service.deletarUsuario("a1");
+        var ordem = inOrder(usuarios);
+        ordem.verify(usuarios).bloquearAdministradores(); ordem.verify(usuarios).findById("a1");
+        ordem.verify(usuarios).countByRole("ADMIN"); ordem.verify(usuarios).deleteById("a1");
+    }
     private final UsuarioRepository usuarios = mock(UsuarioRepository.class);
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     private final UsuarioService service = new UsuarioService(usuarios, encoder);

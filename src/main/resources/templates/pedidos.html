@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"><body><div th:fragment="content">
 <h2>Pedidos</h2>
-<form th:if="${perfil == 'ATENDENTE'}" th:action="@{/pedidos/salvar}" method="post" class="card card-body mb-3">
+<form th:if="${perfil == 'ATENDENTE' or perfil == 'GERENTE'}" th:action="@{/pedidos/salvar}" method="post" class="card card-body mb-3">
  <label>Cliente <select name="clienteId" class="form-select" required>
   <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
  </select></label>

@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/usuarios/**", "/api/usuarios/**", "/admin", "/configuracoes").hasRole("ADMIN")
                         .requestMatchers("/auditoria", "/api/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
+                        .requestMatchers("/dashboard", "/api/dashboard/**").hasAnyRole("ADMIN", "GERENTE")
                         .requestMatchers("/clientes/novo", "/clientes/editar/**", "/clientes/salvar").hasRole("ATENDENTE")
                         .requestMatchers("/clientes", "/api/clientes/**").hasAnyRole("ATENDENTE", "GERENTE")
                         .anyRequest().authenticated()

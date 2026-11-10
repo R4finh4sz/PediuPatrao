@@ -2,6 +2,10 @@
 
 Sistema de pizzaria em Java 21, Spring Boot, Spring Security, Thymeleaf e MongoDB.
 
+## Apresentação
+
+A apresentação do projeto está disponível na pasta [presentation](presentation/). Os documentos solicitados na atividade estão na pasta [docs](docs/).
+
 ## Executar
 
 É necessário ter Java 21 e uma instância MongoDB com replica set (ou MongoDB Atlas) em execução. As operações e a auditoria usam transações conjuntas; MongoDB standalone não suporta essas escritas. O projeto inclui Maven Wrapper.
